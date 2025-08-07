@@ -1,0 +1,13 @@
+{
+  "name": "aetherstore-mini-app",
+  "version": "1.0.0",
+  "description": "Telegram Mini App store with payments.",
+  "main": "index.html",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "node-fetch": "^3.3.2"
+  }
+}

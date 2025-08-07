@@ -1,155 +1,75 @@
-const tg = window.Telegram.WebApp;
-
-const products = [
-  { id: 1, name: "Wireless Headphones", price: 199, image: "https://i.imgur.com/m48skT7.jpeg", description: "High-quality wireless headphones with noise cancellation." },
-  { id: 2, name: "Smartwatch", price: 129, image: "https://i.imgur.com/E322nqy.jpeg", description: "Track fitness and receive notifications on the go." },
-  { id: 3, name: "Portable Speaker", price: 89, image: "https://i.imgur.com/d3b66n4.jpeg", description: "Compact, powerful sound for any adventure." },
-  { id: 4, name: "VR Headset", price: 349, image: "https://i.imgur.com/9C3I0r9.jpeg", description: "Immerse yourself in virtual worlds with stunning clarity." }
-];
-
-let cart = [];
-
-function createProductGrid() {
-  document.body.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-  document.body.style.backgroundColor = tg.themeParams.bg_color || "#121212";
-  document.body.style.color = tg.themeParams.text_color || "white";
-
-  const container = document.createElement('div');
-  container.id = "products";
-  container.style.display = "grid";
-  container.style.gridTemplateColumns = "repeat(auto-fill, minmax(280px, 1fr))";
-  container.style.gap = "1em";
-  container.style.padding = "1em";
-
-  products.forEach(p => {
-    const card = document.createElement("div");
-    card.style.background = tg.themeParams.secondary_bg_color || "#1f1f1f";
-    card.style.borderRadius = "12px";
-    card.style.overflow = "hidden";
-    card.style.display = "flex";
-    card.style.flexDirection = "column";
-
-    const imgContainer = document.createElement('div');
-    imgContainer.style.position = 'relative';
-    imgContainer.style.paddingTop = '60%';
-    const img = document.createElement("img");
-    img.src = p.image;
-    img.alt = p.name;
-    img.style.position = 'absolute';
-    img.style.top = '0';
-    img.style.left = '0';
-    img.style.width = "100%";
-    img.style.height = "100%";
-    img.style.objectFit = 'cover';
-    imgContainer.appendChild(img);
-
-    const content = document.createElement('div');
-    content.style.padding = '1em';
-    content.style.flexGrow = '1';
-    content.style.display = 'flex';
-    content.style.flexDirection = 'column';
-
-    const title = document.createElement("h2");
-    title.textContent = p.name;
-    title.style.margin = "0 0 0.5em";
-
-    const desc = document.createElement("p");
-    desc.textContent = p.description;
-    desc.style.color = tg.themeParams.hint_color || "#aaa";
-    desc.style.flexGrow = '1';
-    desc.style.margin = '0 0 1em';
-
-    const footer = document.createElement("div");
-    footer.style.display = "flex";
-    footer.style.justifyContent = "space-between";
-    footer.style.alignItems = "center";
-    footer.style.marginTop = 'auto';
-
-    const price = document.createElement("span");
-    price.textContent = `₪${p.price}`;
-    price.style.fontWeight = "bold";
-    price.style.fontSize = '1.2em';
-
-    const btn = document.createElement("button");
-    btn.textContent = "Add to Cart";
-    btn.style.padding = "10px 15px";
-    btn.style.border = 'none';
-    btn.style.borderRadius = "8px";
-    btn.style.cursor = 'pointer';
-    btn.style.background = tg.themeParams.button_color || "#0088cc";
-    btn.style.color = tg.themeParams.button_text_color || "white";
-    btn.onclick = () => addToCart(p.id);
-
-    footer.appendChild(price);
-    footer.appendChild(btn);
-    content.appendChild(title);
-    content.appendChild(desc);
-    content.appendChild(footer);
-    card.appendChild(imgContainer);
-    card.appendChild(content);
-    container.appendChild(card);
-  });
-
-  document.body.appendChild(container);
-}
-
-function addToCart(productId) {
-  const product = products.find(p => p.id === productId);
-  if (product) {
-    cart.push(product);
-    updateMainButton();
-    tg.HapticFeedback.notificationOccurred('success');
-  }
-}
-
-function updateMainButton() {
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
-  if (cart.length > 0) {
-    tg.MainButton.setText(`View Cart (${cart.length}) - Total ₪${total}`);
-    tg.MainButton.show();
-  } else {
-    tg.MainButton.hide();
-  }
-}
-
-tg.onEvent('mainButtonClicked', () => {
-  const checkoutData = { cart: cart, user: tg.initDataUnsafe.user };
-  tg.MainButton.showProgress();
-
-  fetch('/api/create-invoice', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(checkoutData),
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.invoiceLink) {
-      tg.openInvoice(data.invoiceLink, (status) => {
-        if (status === 'paid') {
-          tg.showPopup({ title: "Success!", message: "Thank you for your purchase!" });
-          cart = [];
-          updateMainButton();
-          tg.close();
-        } else if (status === 'failed') {
-          tg.showPopup({ title: "Payment Failed", message: "Something went wrong. Please try again." });
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AetherStore</title>
+    <style>
+        /* --- General Setup --- */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212; /* Rich dark background */
+            color: #e0e0e0; /* Soft white text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
-      });
-    } else {
-      tg.showPopup({ title: "Error", message: data.error || "Could not create invoice." });
-    }
-  })
-  .catch(error => {
-      console.error('Fetch Error:', error);
-      tg.showPopup({ title: "Network Error", message: "Unable to connect to the server." });
-  })
-  .finally(() => tg.MainButton.hideProgress());
-});
 
-function initialize() {
-  tg.expand();
-  tg.MainButton.textColor = "#FFFFFF";
-  tg.MainButton.color = "#0088cc";
-  createProductGrid();
-}
+        /* --- Main Content Card --- */
+        .store-container {
+            background-color: #1e1e1e; /* Slightly lighter card background */
+            padding: 3em 3.5em;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 500px;
+        }
+        
 
-initialize();
+        /* --- Typography --- */
+        h1 {
+            font-size: 2.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25em;
+            color: #ffffff;
+        }
+
+        p {
+            font-size: 1.15rem;
+            color: #a0a0a0; /* Softer text for subtitle */
+            margin-bottom: 2.5em;
+            line-height: 1.6;
+        }
+
+        /* --- Interactive Button --- */
+        .cta-button {
+            background: linear-gradient(45deg, #007BFF, #00BFFF); /* Vibrant blue gradient */
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-4px); /* Lifts the button on hover */
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.35); /* Adds a glow effect */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="store-container">
+        <h1>🛍️ Welcome to AetherStore</h1>
+        <p>Your one-stop shop for digital wonders is now live and ready to explore.</p>
+        <button class="cta-button">Explore Products</button>
+    </div>
+
+</body>
+</html>

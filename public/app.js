@@ -37,8 +37,23 @@ function renderCart() {
   });
 }
 
-function checkout() {
-  alert('Checkout will open Telegram Payments next. 👍');
+async function checkout() {
+  try {
+    const user = Telegram?.WebApp?.initDataUnsafe?.user;
+    const res = await fetch('/api/create-invoice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cart, user })
+    });
+    const { invoiceLink } = await res.json();
+    if (invoiceLink) {
+      window.location.href = invoiceLink;
+    } else {
+      alert('Could not create invoice.');
+    }
+  } catch (err) {
+    alert('Could not create invoice.');
+  }
 }
 
 renderProducts();

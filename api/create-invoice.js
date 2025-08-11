@@ -22,6 +22,10 @@ export default async function handler(request, response) {
       return response.status(400).json({ error: 'Cart is invalid or empty.' });
     }
 
+    if (!user || !user.id) {
+      return response.status(400).json({ error: 'User information is missing.' });
+    }
+
     const prices = cart.map(item => ({
       label: item.name,
       amount: item.price * 100 // smallest unit (Agorot)

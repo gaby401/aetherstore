@@ -15,7 +15,7 @@ function renderProducts() {
     card.innerHTML = `
       <h3>${product.name}</h3>
       <div class="price">\$${product.price} USD</div>
-      <button onclick="addToCart(${product.id})">Add to Cart</button>
+      <button type="button" aria-label="Add ${product.name} to cart" onclick="addToCart(${product.id})">Add to Cart</button>
     `;
     container.appendChild(card);
   });

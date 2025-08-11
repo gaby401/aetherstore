@@ -12,15 +12,26 @@
     .card h3 { margin:0 0 6px }
     .price { font-weight:700; }
     button { padding:10px 14px; border:none; border-radius:8px; background:#0ea5e9; color:#fff; cursor:pointer; }
+    button:focus { outline:2px solid #fff; outline-offset:2px; }
     button:active { transform: translateY(1px); }
   </style>
 </head>
 <body>
-  <h1>Welcome to AetherStore</h1>
-  <div id="products"></div>
-  <h2>Cart</h2>
-  <ul id="cart"></ul>
-  <button onclick="checkout()">Checkout</button>
+  <header>
+    <h1>Welcome to AetherStore</h1>
+  </header>
+  <main>
+    <h2>Products</h2>
+    <section id="products" role="grid" aria-label="Product grid"></section>
+    <section aria-label="Shopping cart">
+      <h2>Cart</h2>
+      <ul id="cart" aria-label="Shopping cart items"></ul>
+      <button type="button" aria-label="Proceed to checkout" onclick="checkout()">Checkout</button>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2024 AetherStore</p>
+  </footer>
 
   <script src="./app.js"></script>
 </body>

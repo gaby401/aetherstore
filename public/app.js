@@ -4,7 +4,7 @@ const products = [
   { id: 3, name: 'Mini App Template', price: 7 }
 ];
 
-const cart = [];
+const cart = {};
 
 function renderProducts() {
   const container = document.getElementById('products');
@@ -22,19 +22,48 @@ function renderProducts() {
 }
 
 function addToCart(id) {
-  const item = products.find(p => p.id === id);
-  cart.push(item);
+  if (cart[id]) {
+    cart[id] += 1;
+  } else {
+    cart[id] = 1;
+  }
   renderCart();
+}
+
+function removeFromCart(id) {
+  if (cart[id]) {
+    cart[id] -= 1;
+    if (cart[id] <= 0) {
+      delete cart[id];
+    }
+    renderCart();
+  }
 }
 
 function renderCart() {
   const ul = document.getElementById('cart');
   ul.innerHTML = '';
-  cart.forEach(i => {
+  let total = 0;
+
+  Object.keys(cart).forEach(id => {
+    const item = products.find(p => p.id === Number(id));
+    const quantity = cart[id];
+    const itemTotal = item.price * quantity;
+    total += itemTotal;
+
     const li = document.createElement('li');
-    li.textContent = `${i.name} — \$${i.price}`;
+    li.textContent = `${item.name} x${quantity} — \$${itemTotal.toFixed(2)} `;
+
+    const btn = document.createElement('button');
+    btn.textContent = 'Remove';
+    btn.onclick = () => removeFromCart(item.id);
+    li.appendChild(btn);
+
     ul.appendChild(li);
   });
+
+  const totalEl = document.getElementById('cart-total');
+  totalEl.textContent = `Total: \$${total.toFixed(2)}`;
 }
 
 async function checkout() {
